@@ -35,6 +35,7 @@ import assign.domain.Meetings;
 import assign.domain.NewProject;
 import assign.domain.Project;
 import assign.domain.Projects;
+import assign.services.DBLoader;
 import assign.services.OpenStackMeetingsService;
 import assign.services.OpenStackMeetingsServiceImpl;
 
@@ -42,13 +43,15 @@ import assign.services.OpenStackMeetingsServiceImpl;
 public class OpenStackMeetingsResource {
 	
 	// Placeholder for OpenStackMeetings service;
+	DBLoader dbloader = new DBLoader();
 	OpenStackMeetingsService osmService;
 	String link = "http://eavesdrop.openstack.org/meetings";
 	String password;
 	String username;
 	String dburl;	
 	String dbhost, dbname;
-
+	
+	
 	// constructor gets and assigns parameters form servlet context
 	public OpenStackMeetingsResource(@Context ServletContext servletContext) {
 		dbhost = servletContext.getInitParameter("DBHOST");
@@ -87,9 +90,11 @@ public class OpenStackMeetingsResource {
 	@POST
 	@Consumes("application/xml")
 	public Response createProject(InputStream is) throws Exception {
-		NewProject newProject = readNewProject(is);
-		newProject = this.osmService.addProject(newProject);
-		return Response.created(URI.create("/projects/" + newProject.getProjectID())).build();
+		int projectID = readNewProject(is);
+		//newProject = this.osmService.addProject(newProject);
+		//int pid = dbloader.addProject(name, description)
+		//return Response.created(URI.create("/projects/" + project.getProjectID())).build();
+		return Response.created(URI.create("/projects/" + projectID)).build();
 	}
 
 	@PUT
@@ -108,9 +113,11 @@ public class OpenStackMeetingsResource {
 	@Path("/{project_id}")
 	@Produces("application/xml")
 	public Project getProject(@PathParam("project_id") int pid) {
-		Project project = readGetProject(pid);
+		Project project;
 		try {
-			project = osmService.getProject(project);
+			project = dbloader.getProject(pid);
+			if(project.equals(null))
+				throw new Exception();
 		} catch (Exception e) {
 			throw new WebApplicationException(e, Response.Status.NOT_FOUND);
 		}
@@ -131,32 +138,33 @@ public class OpenStackMeetingsResource {
 	}
 	
 	
-	protected NewProject readNewProject(InputStream is) {
+	protected int readNewProject(InputStream is) {
 		try {
 			DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 			Document doc = builder.parse(is);
 			Element root = doc.getDocumentElement();
-			NewProject project = new NewProject();
+			Project project = new Project();
 			NodeList nodes = root.getChildNodes();
 			
-			String name;
-			String description;
+			String name = null;
+			String description = null;
 			for (int i = 0; i < nodes.getLength(); i++) {
 				Element element = (Element) nodes.item(i);
 				if (element.getTagName().equals("name")) {
 					name = element.getTextContent();
 					if(name.equals(""))
 						throw new WebApplicationException();
-					project.setName(name);
+					//project.setName(name);
 				}
 				else if (element.getTagName().equals("description")) {
 					description = element.getTextContent();
 					if(description.equals(""))
 						throw new WebApplicationException();
-					project.setDescription(description);
+					//project.setDescription(description);
 				}
 			}
-			return project;
+			int pid = dbloader.addProject(name, description);
+			return pid;
 		}
 		catch (Exception e) {
 			throw new WebApplicationException(e, Response.Status.BAD_REQUEST);
