@@ -29,22 +29,14 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import assign.domain.ErrorHandler;
 import assign.domain.Meeting;
-import assign.domain.Meetings;
-import assign.domain.NewProject;
 import assign.domain.Project;
-import assign.domain.Projects;
 import assign.services.DBLoader;
-import assign.services.OpenStackMeetingsService;
-import assign.services.OpenStackMeetingsServiceImpl;
 
 @Path("/projects")
 public class OpenStackMeetingsResource {
 	
-	// Placeholder for OpenStackMeetings service;
 	DBLoader dbloader = new DBLoader();
-	OpenStackMeetingsService osmService;
 	String link = "http://eavesdrop.openstack.org/meetings";
 	String password;
 	String username;
@@ -59,7 +51,7 @@ public class OpenStackMeetingsResource {
 		dburl = "jdbc:mysql://" + dbhost + ":3306/" + dbname;
 		username = servletContext.getInitParameter("DBUSERNAME");
 		password = servletContext.getInitParameter("DBPASSWORD");
-		this.osmService = new OpenStackMeetingsServiceImpl(dburl, username, password);		
+		//this.osmService = new OpenStackMeetingsServiceImpl(dburl, username, password);		
 	}
 
 	// default empty constructor
@@ -68,18 +60,18 @@ public class OpenStackMeetingsResource {
 //	}
 	
 	// Use this for unit testing
-	protected void setOpenStackMeetingsService(OpenStackMeetingsService osmService) {
-		this.osmService = osmService;
-	}
+//	protected void setOpenStackMeetingsService(OpenStackMeetingsService osmService) {
+//		this.osmService = osmService;
+//	}
 	
 	// Default landing page for /projects - shows all projects
 	@GET
 	@Path("")
 	@Produces("application/xml")
-	public Projects getAllProjects() throws Exception {
+	public Project getAllProjects() throws Exception {
 		//String link = "http://eavesdrop.openstack.org/meetings";
 		//String value = "";
-		Projects projects = new Projects();
+		Project projects = new Project();
 		//List<String> projectList = osmService.getData(link, value);
 		//projects.setProjects(projectList);
 		
@@ -141,18 +133,20 @@ public class OpenStackMeetingsResource {
 		return project;
 	}
 	
-//	@DELETE
-//	@Path("/{project_id}")
-//	@Produces("application/xml")
-//	public Response deleteProject(@PathParam("project_id") int pid) {
-//		Project project = readDeleteProject(pid);
-//		try {
-//			project = osmService.deleteProject(project);
-//		} catch (Exception e) {
-//			throw new WebApplicationException(e, Response.Status.NOT_FOUND);
-//		}
-//		return Response.ok().build();
-//	}
+	/*** Deletes a project and all of its meetings ***/
+	@DELETE
+	@Path("/{project_id}")
+	@Produces("application/xml")
+	public Response deleteProject(@PathParam("project_id") int pid) {
+		//Project project = readDeleteProject(pid);
+		try {
+			//project = osmService.deleteProject(project);
+			dbloader.deleteProject(pid);
+		} catch (Exception e) {
+			throw new WebApplicationException(e, Response.Status.NOT_FOUND);
+		}
+		return Response.ok().build();
+	}
 	
 	
 	protected int readNewProject(InputStream is) {

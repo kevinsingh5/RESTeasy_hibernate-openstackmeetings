@@ -10,7 +10,6 @@ import java.util.Set;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
-import assign.services.OpenStackMeetingsService;
 
 @ApplicationPath("/myeavesdrop")
 public class OpenStackMeetingsApplication extends Application {

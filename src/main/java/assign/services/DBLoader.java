@@ -146,6 +146,20 @@ public class DBLoader {
 	}
 	
 	
+	public void deleteProject(int pid) throws Exception {
+		
+		Session session = sessionFactory.openSession();		
+		session.beginTransaction();
+		String query = "from Project p where p.projectID = :projectID";		
+				
+		Project p = (Project)session.createQuery(query).setParameter("projectID", pid).list().get(0);
+		
+        session.delete(p);
+
+        session.getTransaction().commit();
+        session.close();
+	}
+	
 	public Project getProject(int pid) throws Exception {
 		Session session = sessionFactory.openSession();
 		session.beginTransaction();
