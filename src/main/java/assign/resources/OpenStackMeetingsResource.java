@@ -86,7 +86,7 @@ public class OpenStackMeetingsResource {
 		return projects;    
 	}	
 	
-	
+	/*** Create a new project ***/
 	@POST
 	@Consumes("application/xml")
 	public Response createProject(InputStream is) throws Exception {
@@ -108,18 +108,24 @@ public class OpenStackMeetingsResource {
 		return Response.created(URI.create("/projects/" + pid + "/meetings/" + meetingID)).build();
 	}
 
+	/*** Updates values for meeting 'mid' ***/
 	@PUT
-	@Path("/{project_id}")
+	@Path("/{project_id}/meetings/{meeting_id}")
 	@Consumes("application/xml")
-	public Response updateProject(InputStream is, @PathParam("project_id") int pid) throws Exception {
-		if(pid <= 0)
-			throw new WebApplicationException();
+	public Response updateMeeting(InputStream is, @PathParam("project_id") int pid, 
+			@PathParam("meeting_id") int mid) throws Exception {
+			
+		if(pid <= 0 || mid <= 0)
+			throw new WebApplicationException(Response.Status.NOT_FOUND);
 		
-		NewProject newProject = readUpdatedProject(is, pid);
-		newProject = this.osmService.updateProject(newProject);
-		return Response.noContent().build();
+		int meetingID = readUpdateMeeting(is, pid, mid);
+		if(meetingID < 0)
+			throw new WebApplicationException(Response.Status.NOT_FOUND);
+		
+		return Response.ok().build();
 	}
 	
+	/*** Return xml for project with id 'pid' ***/
 	@GET
 	@Path("/{project_id}")
 	@Produces("application/xml")
@@ -135,18 +141,18 @@ public class OpenStackMeetingsResource {
 		return project;
 	}
 	
-	@DELETE
-	@Path("/{project_id}")
-	@Produces("application/xml")
-	public Response deleteProject(@PathParam("project_id") int pid) {
-		Project project = readDeleteProject(pid);
-		try {
-			project = osmService.deleteProject(project);
-		} catch (Exception e) {
-			throw new WebApplicationException(e, Response.Status.NOT_FOUND);
-		}
-		return Response.ok().build();
-	}
+//	@DELETE
+//	@Path("/{project_id}")
+//	@Produces("application/xml")
+//	public Response deleteProject(@PathParam("project_id") int pid) {
+//		Project project = readDeleteProject(pid);
+//		try {
+//			project = osmService.deleteProject(project);
+//		} catch (Exception e) {
+//			throw new WebApplicationException(e, Response.Status.NOT_FOUND);
+//		}
+//		return Response.ok().build();
+//	}
 	
 	
 	protected int readNewProject(InputStream is) {
@@ -154,8 +160,6 @@ public class OpenStackMeetingsResource {
 			DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 			Document doc = builder.parse(is);
 			Element root = doc.getDocumentElement();
-			//TODO: eliminate project from method
-			Project project = new Project();
 			NodeList nodes = root.getChildNodes();
 			
 			String name = null;
@@ -163,16 +167,14 @@ public class OpenStackMeetingsResource {
 			for (int i = 0; i < nodes.getLength(); i++) {
 				Element element = (Element) nodes.item(i);
 				if (element.getTagName().equals("name")) {
-					name = element.getTextContent();
+					name = element.getTextContent().trim();
 					if(name.equals(""))
 						throw new WebApplicationException();
-					//project.setName(name);
 				}
 				else if (element.getTagName().equals("description")) {
-					description = element.getTextContent();
+					description = element.getTextContent().trim();
 					if(description.equals(""))
 						throw new WebApplicationException();
-					//project.setDescription(description);
 				}
 			}
 			int pid = dbloader.addProject(name, description);
@@ -196,13 +198,13 @@ public class OpenStackMeetingsResource {
 			for (int i = 0; i < nodes.getLength(); i++) {
 				Element element = (Element) nodes.item(i);
 				if (element.getTagName().equals("name")) {
-					name = element.getTextContent();
-					if(name.trim().equals(""))
+					name = element.getTextContent().trim();
+					if(name.equals(""))
 						throw new WebApplicationException();
 				}
 				else if (element.getTagName().equals("year")) {
-					yearString = element.getTextContent();
-					if(yearString.trim().equals(""))
+					yearString = element.getTextContent().trim();
+					if(yearString.equals(""))
 						throw new WebApplicationException();
 					else
 						year = Integer.parseInt(yearString);
@@ -218,8 +220,42 @@ public class OpenStackMeetingsResource {
 		}
    }
 	
+	protected int readUpdateMeeting(InputStream is, int projectID, int meetingID) {
+		try {
+			DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+			Document doc = builder.parse(is);
+			Element root = doc.getDocumentElement();
+			NodeList nodes = root.getChildNodes();
+			
+			String name = null;
+			String yearString = null;
+			int year = -1;
+			for (int i = 0; i < nodes.getLength(); i++) {
+				Element element = (Element) nodes.item(i);
+				if (element.getTagName().equals("name")) {
+					name = element.getTextContent().trim();
+					if(name.equals(""))
+						throw new WebApplicationException();
+				}
+				else if (element.getTagName().equals("year")) {
+					yearString = element.getTextContent().trim();
+					if(yearString.equals(""))
+						throw new WebApplicationException();
+					else
+						year = Integer.parseInt(yearString);
+						if(year < 2010 || year > 2017)
+							throw new WebApplicationException();
+				}
+			}
+			int mid = dbloader.updateMeeting(name, year, projectID, meetingID);
+			return mid;
+		}
+		catch (Exception e) {
+			throw new WebApplicationException(e, Response.Status.BAD_REQUEST);
+		}
+   }
 	
-
+/*
 	protected NewProject readUpdatedProject(InputStream is, int pid) {
 		try {
 			DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -269,5 +305,6 @@ public class OpenStackMeetingsResource {
 
 		return project;
 	}
+	*/
 		
 }

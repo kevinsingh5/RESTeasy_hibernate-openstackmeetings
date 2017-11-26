@@ -18,16 +18,21 @@ import assign.domain.Meeting;
 
 import java.util.logging.*;
 
+import javax.naming.spi.DirStateFactory.Result;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+
 public class DBLoader {
 	
 	private SessionFactory sessionFactory;
 	Logger logger;
 	
 	public DBLoader() {
+//		DEPRECATED SOLUTION		
 //		// A SessionFactory is set up once for an application
 //        sessionFactory = new Configuration()
 //                .configure() // configures settings from hibernate.cfg.xml
-//                .buildSessionFactory();
+//                .buildSessionFactory(); // --> DEPRECATED
 //        
 //        logger = Logger.getLogger("DBLoader");
         
@@ -111,6 +116,35 @@ public class DBLoader {
 		}
 		return meetingId;
 	}
+
+	public int updateMeeting(String name, int year, int pid, int mid) throws Exception {
+		Session session = sessionFactory.openSession();
+		Transaction tx = null;
+		int meetingId = -1;
+		
+		try {
+			tx = session.beginTransaction();
+			Criteria criteria = session.createCriteria(Meeting.class).add(Restrictions.eq("meetingID", mid));
+			List<Meeting> meetingList = criteria.list();
+			Meeting meeting = meetingList.get(0);
+			if(meeting.getProject().getProjectID() != pid) // check the meeting exists in the project
+				throw new WebApplicationException(Response.Status.NOT_FOUND);
+			meeting.setName(name);
+			meeting.setYear(year);
+			session.save(meeting);
+			meetingId = meeting.getMeetingID();
+		    tx.commit();
+		} catch (Exception e) {
+			if (tx != null) {
+				tx.rollback();
+			}
+		}
+		finally {
+			session.close();
+		}
+		return meetingId;
+	}
+	
 	
 	public Project getProject(int pid) throws Exception {
 		Session session = sessionFactory.openSession();
@@ -222,7 +256,6 @@ public class DBLoader {
 		}
 	}
 	
-////////////////////
 
 	public Homework getHomework_using_get(Long homeworkId) throws Exception {
 		Session session = sessionFactory.openSession();
