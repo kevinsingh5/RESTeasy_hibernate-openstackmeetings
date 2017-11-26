@@ -96,6 +96,17 @@ public class OpenStackMeetingsResource {
 		//return Response.created(URI.create("/projects/" + project.getProjectID())).build();
 		return Response.created(URI.create("/projects/" + projectID)).build();
 	}
+	
+	/*** Create a new meeting for project id 'pid' ***/
+	@POST
+	@Path("/{project_id}/meetings")
+	@Consumes("application/xml")
+	public Response createMeetingForProject(InputStream is, @PathParam("project_id") int pid) throws Exception {
+		int meetingID = readNewMeetingForProject(is, pid);
+		if(meetingID == -1)
+			throw new WebApplicationException(Response.Status.NOT_FOUND);
+		return Response.created(URI.create("/projects/" + pid + "/meetings/" + meetingID)).build();
+	}
 
 	@PUT
 	@Path("/{project_id}")
@@ -143,6 +154,7 @@ public class OpenStackMeetingsResource {
 			DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 			Document doc = builder.parse(is);
 			Element root = doc.getDocumentElement();
+			//TODO: eliminate project from method
 			Project project = new Project();
 			NodeList nodes = root.getChildNodes();
 			
@@ -170,6 +182,42 @@ public class OpenStackMeetingsResource {
 			throw new WebApplicationException(e, Response.Status.BAD_REQUEST);
 		}
    }
+	
+	protected int readNewMeetingForProject(InputStream is, int projectID) {
+		try {
+			DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+			Document doc = builder.parse(is);
+			Element root = doc.getDocumentElement();
+			NodeList nodes = root.getChildNodes();
+			
+			String name = null;
+			String yearString = null;
+			int year = -1;
+			for (int i = 0; i < nodes.getLength(); i++) {
+				Element element = (Element) nodes.item(i);
+				if (element.getTagName().equals("name")) {
+					name = element.getTextContent();
+					if(name.trim().equals(""))
+						throw new WebApplicationException();
+				}
+				else if (element.getTagName().equals("year")) {
+					yearString = element.getTextContent();
+					if(yearString.trim().equals(""))
+						throw new WebApplicationException();
+					else
+						year = Integer.parseInt(yearString);
+						if(year < 2010 || year > 2017)
+							throw new WebApplicationException();
+				}
+			}
+			int pid = dbloader.addMeetingForProject(name, year, projectID);
+			return pid;
+		}
+		catch (Exception e) {
+			throw new WebApplicationException(e, Response.Status.BAD_REQUEST);
+		}
+   }
+	
 	
 
 	protected NewProject readUpdatedProject(InputStream is, int pid) {

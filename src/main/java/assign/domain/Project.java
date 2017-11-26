@@ -32,7 +32,7 @@ public class Project {
 	@XmlAttribute
 	private int project_id;
 	@XmlElementWrapper(name="meetings")
-	private Set<Meeting> meetings;
+	private Set<Meeting> meeting;
 		
 	// default constructor for Hibernate
 	public Project() {
@@ -74,11 +74,11 @@ public class Project {
     @Cascade({CascadeType.DELETE})
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "project")//, cascade = CascadeType.ALL)
     public Set<Meeting> getMeetings() {
-    	return this.meetings;
+    	return this.meeting;
     }
     
     public void setMeetings(Set<Meeting> meetings) {
-    	this.meetings = meetings;
+    	this.meeting = meetings;
     }
 	
 }

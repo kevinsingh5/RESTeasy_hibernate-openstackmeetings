@@ -88,14 +88,14 @@ public class DBLoader {
 		return mid;
 	}
 	
-	public int addMeetingForProject(String name, int year, Long projectId) throws Exception {
+	public int addMeetingForProject(String name, int year, int projectId) throws Exception {
 		Session session = sessionFactory.openSession();
 		Transaction tx = null;
 		int meetingId = -1;
 		try {
 			tx = session.beginTransaction();
 			Meeting meeting = new Meeting(name, year);
-			Criteria criteria = session.createCriteria(Project.class).add(Restrictions.eq("project_id", projectId));
+			Criteria criteria = session.createCriteria(Project.class).add(Restrictions.eq("projectID", projectId));
 			List<Project> projectList = criteria.list();
 			meeting.setProject(projectList.get(0));
 			session.save(meeting);
@@ -104,7 +104,6 @@ public class DBLoader {
 		} catch (Exception e) {
 			if (tx != null) {
 				tx.rollback();
-				throw e;
 			}
 		}
 		finally {

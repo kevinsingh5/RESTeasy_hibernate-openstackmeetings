@@ -3,18 +3,22 @@ package assign.domain;
 import javax.persistence.*;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 
 @Entity
 @Table(name = "meetings")
 @XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Meeting {
 	
 	private String name;
 	private int year;
+	@XmlAttribute
 	private int meeting_id;
+	@XmlTransient
 	private Project project;
 
 	// default constructor for Hibernate
