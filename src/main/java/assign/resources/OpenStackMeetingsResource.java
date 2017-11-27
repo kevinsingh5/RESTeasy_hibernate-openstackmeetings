@@ -1,11 +1,7 @@
 package assign.resources;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URI;
-import java.util.List;
-
 import javax.servlet.ServletContext;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -18,10 +14,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -29,7 +21,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import assign.domain.Meeting;
 import assign.domain.Project;
 import assign.services.DBLoader;
 
@@ -249,56 +240,4 @@ public class OpenStackMeetingsResource {
 		}
    }
 	
-/*
-	protected NewProject readUpdatedProject(InputStream is, int pid) {
-		try {
-			DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-			Document doc = builder.parse(is);
-			Element root = doc.getDocumentElement();
-			NewProject project = new NewProject();
-			NodeList nodes = root.getChildNodes();
-			
-			
-			int proj_id = pid;
-			project.setProjectID(proj_id);
-			String name;
-			String description;
-	
-			for (int i = 0; i < nodes.getLength(); i++) {
-				Element element = (Element) nodes.item(i);
-				if (element.getTagName().equals("name")) {
-					name = element.getTextContent();
-					if(name.equals(""))
-						throw new WebApplicationException();
-					project.setName(name);
-				}
-				else if (element.getTagName().equals("description")) {
-					description = element.getTextContent();
-					if(description.equals(""))
-						throw new WebApplicationException();
-					project.setDescription(description);
-				}
-			}
-			return project;
-		}
-		catch (Exception e) {
-			throw new WebApplicationException(e, Response.Status.BAD_REQUEST);
-		}
-   }
-	
-	protected Project readGetProject(int pid) {
-		Project project = new Project();
-		project.setProjectID(pid);
-
-		return project;
-	}
-
-	protected Project readDeleteProject(int pid) {
-		Project project = new Project();
-		project.setProjectID(pid);
-
-		return project;
-	}
-	*/
-		
 }
